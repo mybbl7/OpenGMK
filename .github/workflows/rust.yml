@@ -109,6 +109,7 @@ jobs:
           cargo build --release
           mkdir -p target/release/dist
           # adjust binary names/paths as needed
+          find .
           cp target/release/gm8emulator target/release/dist/ || true
           cd target/release/dist
           zip -r ../../GM8Emulator-linux.zip . || true
