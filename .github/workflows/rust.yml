@@ -43,8 +43,17 @@ jobs:
           rustup target add i686-pc-windows-msvc --toolchain=nightly
           cd "gm8emulator-wow64"
           cargo +nightly build --release
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Build failed for gm8emulator-wow64"
+            exit 1
+          }
           Get-ChildItem -Recurse -Filter '*.exe'
-          Move-Item -Path target/i686-pc-windows-msvc/release/gm8emulator-wow64.exe -Destination .
+          if (Test-Path "target/i686-pc-windows-msvc/release/gm8emulator-wow64.exe") {
+            Move-Item -Path "target/i686-pc-windows-msvc/release/gm8emulator-wow64.exe" -Destination "." -Force
+          } else {
+            Write-Error "gm8emulator-wow64.exe not found after build"
+            exit 1
+          }
           cd ..
       - name: Build the GM8Emulator.zip artifact
         shell: pwsh
