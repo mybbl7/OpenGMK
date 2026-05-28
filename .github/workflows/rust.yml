@@ -109,10 +109,9 @@ jobs:
         run: |
           cargo build --release
           mkdir -p archive
-          cp gm8emulator archive
+          cp target/release/gm8emulator archive
           # adjust binary names/paths as needed
           find . -maxdepth 3
-          zip -u GM8Emulator-linux.zip gm8emulator
         
       - uses: actions/upload-artifact@v4
         with:
