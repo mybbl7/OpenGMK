@@ -50,7 +50,8 @@ jobs:
         7z -tzip a GM8Emulator.zip control-panel.exe gm8emulator-wow64.exe gm8decompiler.exe gm8emulator.exe -mx0 | grep ing 
         cd ../..
         mv target/release/GM8Emulator.zip .
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2
+    - name: Download artifact
+      uses: actions/download-artifact@v4
       with:
-          path: GM8Emulator.zip
+        name: GM8Emulator
+
