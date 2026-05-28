@@ -4,11 +4,11 @@ on:
   repository_dispatch:
     types: [build]
   workflow_dispatch:
-      inputs:
-        name:
-          description: 'Run?'
-          required: true
-          default: 'YES!'
+    inputs:
+      name:
+        description: 'Run?'
+        required: true
+        default: 'YES!'
   push:
     branches: [ master ]
   pull_request:
@@ -18,40 +18,109 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-    runs-on: windows-latest
+  build-windows:
+    name: Build Windows
+    runs-on: windows-2025-vs2026
     steps:
-    - uses: hecrj/setup-rust-action@master
-      with:
-        rust-version: stable
-    - uses: actions/setup-node@v1
-      with:
-        node-version: '10.x'
-    - run: npm install -g yarn
-    - uses: actions/checkout@v2
-    - name: Rust set up
-      run: |
-        set path="%USERPROFILE%\.cargo\bin"
-        rustup self update
-        rustup update
-        rustup install nightly
-        git submodule update --init --recursive
-        rustup target add i686-pc-windows-msvc --toolchain=nightly
-        cd "gm8emulator-wow64"
-        cargo +nightly build --release
-        mv target/i686-pc-windows-msvc/release/gm8emulator-wow64.exe .
-        cd ..
-    - name: Build the GM8Emulator.zip artifact
-      run: cargo +nightly build --release
-    - name: Archive bin
-      run: |
-        mv gm8emulator-wow64/gm8emulator-wow64.exe target/release
-        cd target/release 
-        7z -tzip a GM8Emulator.zip control-panel.exe gm8emulator-wow64.exe gm8decompiler.exe gm8emulator.exe -mx0 | grep ing 
-        cd ../..
-        mv target/release/GM8Emulator.zip .
-    - name: Download artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: GM8Emulator
+      - uses: actions/checkout@v4
+      - uses: hecrj/setup-rust-action@master
+        with:
+          rust-version: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '10.x'
+      - run: npm install -g yarn
+      - name: Rust set up
+        run: |
+          set path="%USERPROFILE%\.cargo\bin"
+          rustup self update
+          rustup update
+          rustup install nightly
+          git submodule update --init --recursive
+          rustup target add i686-pc-windows-msvc --toolchain=nightly
+          cd "gm8emulator-wow64"
+          cargo +nightly build --release
+          mv target/i686-pc-windows-msvc/release/gm8emulator-wow64.exe .
+          cd ..
+      - name: Build the GM8Emulator.zip artifact
+        run: cargo +nightly build --release
+      - name: Archive bin
+        run: |
+          mv gm8emulator-wow64/gm8emulator-wow64.exe target/release
+          cd target/release
+          7z -tzip a GM8Emulator-windows.zip control-panel.exe gm8emulator-wow64.exe gm8decompiler.exe gm8emulator.exe -mx0 | grep ing || true
+          cd ../..
+          mv target/release/GM8Emulator-windows.zip .
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GM8Emulator-windows
+          path: GM8Emulator-windows.zip
 
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '10.x'
+      - uses: hecrj/setup-rust-action@master
+        with:
+          rust-version: stable
+      - name: Rust set up
+        run: |
+          rustup self update
+          rustup update
+          git submodule update --init --recursive
+      - name: Build Linux release
+        run: |
+          cargo build --release
+          mkdir -p target/release/dist
+          # adjust binary names/paths as needed
+          cp target/release/gm8emulator target/release/dist/ || true
+          cd target/release/dist
+          zip -r ../../GM8Emulator-linux.zip . || true
+          cd ../../..
+          mv target/release/GM8Emulator-linux.zip .
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GM8Emulator-linux
+          path: GM8Emulator-linux.zip
+
+  collect:
+    name: Collect and package artifacts
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-linux]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifact pls
+        uses: actions/download-artifact@v4
+        with:
+          name: GM8Emulator-windows
+          path: artifacts/windows
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: GM8Emulator-linux
+          path: artifacts/linux
+      - name: Inspect downloaded artifacts
+        run: |
+          echo "Windows files:"
+          ls -la artifacts/windows || true
+          echo "Linux files:"
+          ls -la artifacts/linux || true
+      - name: Create combined release zip
+        run: |
+          mkdir -p release
+          cp artifacts/windows/* release/ || true
+          cp artifacts/linux/* release/ || true
+          cd release
+          zip -r ../GM8Emulator-all-platforms.zip . || true
+          cd ..
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GM8Emulator-all
+          path: GM8Emulator-all-platforms.zip
