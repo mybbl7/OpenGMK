@@ -31,8 +31,11 @@ jobs:
           node-version: '10.x'
       - run: npm install -g yarn
       - name: Rust set up
+        shell: pwsh
+        env:
+          LIBFFI_SYS_STATIC: 1
         run: |
-          set path="%USERPROFILE%\.cargo\bin"
+          $env:Path += ";$env:USERPROFILE\.cargo\bin"
           rustup self update
           rustup update
           rustup install nightly
@@ -40,17 +43,21 @@ jobs:
           rustup target add i686-pc-windows-msvc --toolchain=nightly
           cd "gm8emulator-wow64"
           cargo +nightly build --release
-          mv target/i686-pc-windows-msvc/release/gm8emulator-wow64.exe .
+          Move-Item -Path target/i686-pc-windows-msvc/release/gm8emulator-wow64.exe -Destination .
           cd ..
       - name: Build the GM8Emulator.zip artifact
+        shell: pwsh
+        env:
+          LIBFFI_SYS_STATIC: 1
         run: cargo +nightly build --release
       - name: Archive bin
+        shell: pwsh
         run: |
-          mv gm8emulator-wow64/gm8emulator-wow64.exe target/release
+          Move-Item -Path gm8emulator-wow64/gm8emulator-wow64.exe -Destination target/release
           cd target/release
-          7z -tzip a GM8Emulator-windows.zip control-panel.exe gm8emulator-wow64.exe gm8decompiler.exe gm8emulator.exe -mx0 | grep ing || true
+          7z -tzip a GM8Emulator-windows.zip control-panel.exe gm8emulator-wow64.exe gm8decompiler.exe gm8emulator.exe -mx0 | grep ing || $true
           cd ../..
-          mv target/release/GM8Emulator-windows.zip .
+          Move-Item -Path target/release/GM8Emulator-windows.zip -Destination .
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
