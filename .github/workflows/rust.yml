@@ -108,16 +108,16 @@ jobs:
       - name: Build Linux release
         run: |
           cargo build --release
-          mkdir -p target/release/dist
+          mkdir -p archive
+          cp gm8emulator archive
           # adjust binary names/paths as needed
           find . -maxdepth 3
           zip -u GM8Emulator-linux.zip gm8emulator
-          
-      - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        
+      - uses: actions/upload-artifact@v4
         with:
-          name: GM8Emulator-linux
-          path: GM8Emulator-linux.zip
+          name: GM8Emulator-linux.${{github.event_name == 'pull_request' && format('PR{0}', github.event.number) || github.ref_name}}-${{steps.short-sha.outputs.sha}}
+          path: archive
 
   collect:
     name: Collect and package artifacts
