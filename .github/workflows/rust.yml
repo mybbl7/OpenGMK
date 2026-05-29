@@ -35,8 +35,15 @@ jobs:
         env:
           LIBFFI_SYS_STATIC: 1
         run: |
-          # Initialize MSVC environment
-          & "C:\Program Files\Microsoft Visual Studio\2026\Community\VC\Auxiliary\Build\vcvars32.bat"
+          # Find Visual Studio installation dynamically
+          $vsPath = & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Workload.NativeDesktop -property installationPath
+          if ($vsPath) {
+            $vcvarsPath = Join-Path $vsPath "VC\Auxiliary\Build\vcvars32.bat"
+            & $vcvarsPath
+          } else {
+            Write-Error "Visual Studio not found"
+            exit 1
+          }
           
           $env:Path += ";$env:USERPROFILE\.cargo\bin"
           rustup self update
