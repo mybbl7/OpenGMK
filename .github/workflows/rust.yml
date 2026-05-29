@@ -39,7 +39,13 @@ jobs:
           $vsPath = & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Workload.NativeDesktop -property installationPath
           if ($vsPath) {
             $vcvarsPath = Join-Path $vsPath "VC\Auxiliary\Build\vcvars32.bat"
-            & $vcvarsPath
+            # Execute vcvars32.bat and capture environment
+            cmd /c "call `"$vcvarsPath`" && set" | ForEach-Object {
+              if ($_ -match '=') {
+                $name, $value = $_.split('=', 2)
+                [Environment]::SetEnvironmentVariable($name, $value)
+              }
+            }
           } else {
             Write-Error "Visual Studio not found"
             exit 1
