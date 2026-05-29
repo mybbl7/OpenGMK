@@ -42,7 +42,9 @@ jobs:
           git submodule update --init --recursive
           rustup target add i686-pc-windows-msvc --toolchain=nightly
           cd "gm8emulator-wow64"
-          cargo +nightly build --release
+          $env:LIBFFI_SYS_STATIC = "1"
+          $env:LIBFFI_DIR = "$PWD\libffi-build"
+          cargo +nightly build --release --target i686-pc-windows-msvc
           if ($LASTEXITCODE -ne 0) {
             Write-Error "Build failed for gm8emulator-wow64"
             exit 1
