@@ -35,6 +35,9 @@ jobs:
         env:
           LIBFFI_SYS_STATIC: 1
         run: |
+          # Initialize MSVC environment
+          & "C:\Program Files\Microsoft Visual Studio\2026\Community\VC\Auxiliary\Build\vcvars32.bat"
+          
           $env:Path += ";$env:USERPROFILE\.cargo\bin"
           rustup self update
           rustup update
