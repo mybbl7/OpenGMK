@@ -44,6 +44,8 @@ jobs:
           cd "gm8emulator-wow64"
           $env:LIBFFI_SYS_STATIC = "1"
           $env:LIBFFI_DIR = "$PWD\libffi-build"
+          $env:CC = "cl.exe"
+          $env:AR = "lib.exe"
           cargo +nightly build --release --target i686-pc-windows-msvc
           if ($LASTEXITCODE -ne 0) {
             Write-Error "Build failed for gm8emulator-wow64"
