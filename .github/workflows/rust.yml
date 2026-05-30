@@ -30,18 +30,6 @@ jobs:
         run: choco install mingw -y --force
       - name: Configure CMake generator
         run: echo "CMAKE_GENERATOR=MinGW Makefiles" >> $env:GITHUB_ENV
-      - name: Configure libsoundio
-        run: |
-          cmake -G "MinGW Makefiles" \
-            -DBUILD_DYNAMIC_LIBS=OFF \
-            -DBUILD_STATIC_LIBS=ON \
-            -DBUILD_EXAMPLE_PROGRAMS=OFF \
-            -DBUILD_TESTS=OFF \
-            -DENABLE_JACK=OFF \
-            -DENABLE_PULSEAUDIO=OFF \
-            -DENABLE_ALSA=OFF \
-            -DENABLE_COREAUDIO=OFF \
-            -DENABLE_WASAPI=ON
       - name: Build 64-bit GNU target
         run: |
           rustup target add x86_64-pc-windows-gnu
