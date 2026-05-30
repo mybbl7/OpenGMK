@@ -19,80 +19,70 @@ env:
 
 jobs:
   build-windows:
-    name: Build Windows
-    runs-on: windows-2025-vs2026
+    name: Build Windows (MinGW)
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: hecrj/setup-rust-action@master
         with:
           rust-version: stable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '10.x'
-      - run: npm install -g yarn
-      - name: Rust set up
+
+      - name: Install MinGW
+        run: choco install mingw -y
+
+      - name: Rust setup
         shell: pwsh
-        env:
-          LIBFFI_SYS_STATIC: 1
         run: |
-          # Find Visual Studio installation dynamically
-          $vsPath = & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Workload.NativeDesktop -property installationPath
-          if ($vsPath) {
-            $vcvarsPath = Join-Path $vsPath "VC\Auxiliary\Build\vcvars32.bat"
-            # Execute vcvars32.bat and capture environment
-            cmd /c "call `"$vcvarsPath`" && set" | ForEach-Object {
-              if ($_ -match '=') {
-                $name, $value = $_.split('=', 2)
-                [Environment]::SetEnvironmentVariable($name, $value)
-              }
-            }
-          } else {
-            Write-Error "Visual Studio not found"
-            exit 1
-          }
-          
-          $env:Path += ";$env:USERPROFILE\.cargo\bin"
           rustup self update
           rustup update
           rustup install nightly
           git submodule update --init --recursive
-          rustup target add i686-pc-windows-msvc --toolchain=nightly
-          cd "gm8emulator-wow64"
+          rustup target add i686-pc-windows-gnu --toolchain=nightly
+
+      - name: Build gm8emulator-wow64 (GNU target)
+        shell: pwsh
+        env:
+          LIBFFI_SYS_STATIC: 1
+          CC: gcc
+          AR: ar
+        run: |
+          cd gm8emulator-wow64
           $env:LIBFFI_SYS_STATIC = "1"
           $env:LIBFFI_DIR = "$PWD\libffi-build"
-          $env:CC = "cl.exe"
-          $env:AR = "lib.exe"
-          cargo +nightly build --release --target i686-pc-windows-msvc
+          cargo +nightly build --release --target i686-pc-windows-gnu
           if ($LASTEXITCODE -ne 0) {
             Write-Error "Build failed for gm8emulator-wow64"
             exit 1
           }
           Get-ChildItem -Recurse -Filter '*.exe'
-          if (Test-Path "target/i686-pc-windows-msvc/release/gm8emulator-wow64.exe") {
-            Move-Item -Path "target/i686-pc-windows-msvc/release/gm8emulator-wow64.exe" -Destination "." -Force
+          if (Test-Path "target/i686-pc-windows-gnu/release/gm8emulator-wow64.exe") {
+            Move-Item -Path "target/i686-pc-windows-gnu/release/gm8emulator-wow64.exe" -Destination "." -Force
           } else {
             Write-Error "gm8emulator-wow64.exe not found after build"
             exit 1
           }
           cd ..
-      - name: Build the GM8Emulator.zip artifact
+
+      - name: Build GM8Emulator.zip artifact
         shell: pwsh
-        env:
-          LIBFFI_SYS_STATIC: 1
-        run: cargo +nightly build --release
+        run: cargo +nightly build --release --target i686-pc-windows-gnu
+
       - name: Archive bin
         shell: pwsh
         run: |
-          Move-Item -Path gm8emulator-wow64/gm8emulator-wow64.exe -Destination target/release
-          cd target/release
+          Move-Item -Path gm8emulator-wow64/gm8emulator-wow64.exe -Destination target/i686-pc-windows-gnu/release
+          cd target/i686-pc-windows-gnu/release
           7z -tzip a GM8Emulator-windows.zip control-panel.exe gm8emulator-wow64.exe gm8decompiler.exe gm8emulator.exe -mx0 | grep ing || $true
-          cd ../..
-          Move-Item -Path target/release/GM8Emulator-windows.zip -Destination .
+          cd ../../..
+          Move-Item -Path target/i686-pc-windows-gnu/release/GM8Emulator-windows.zip -Destination .
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: GM8Emulator-windows
           path: GM8Emulator-windows.zip
+
 
   build-linux:
     name: Build Linux
