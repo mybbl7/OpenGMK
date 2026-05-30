@@ -30,30 +30,31 @@ jobs:
         run: choco install mingw -y
       - name: Build 64-bit GNU target
         run: |
-          cargo +nightly build --release 
+          rustup target add x86_64-pc-windows-gnu
+          cargo +nightly build --release --target x86_64-pc-windows-gnu
       - uses: actions/upload-artifact@v4
         with:
           name: GM8Emulator-windows-x64
-          path: target
-          
+          path: target/x86_64-pc-windows-gnu/release/*.exe
+
   build-windows-32:
-    name: Build Windows 32-bit (MSVC)
+    name: Build Windows 32-bit (MinGW)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: hecrj/setup-rust-action@master
         with:
-          rust-version: nightly
-      - name: Install i686 MSVC target + rust-src
+          rust-version: stable
+      - name: Install MinGW
+        run: choco install mingw -y
+      - name: Build 32-bit GNU target
         run: |
-          rustup target add i686-pc-windows-msvc --toolchain nightly
-          rustup component add rust-src --toolchain nightly
-      - name: Build 32-bit MSVC target with std
-        run: cargo +nightly build -Zbuild-std --target i686-pc-windows-msvc --release
+          rustup target add i686-pc-windows-gnu
+          cargo +nightly build --release --target i686-pc-windows-gnu
       - uses: actions/upload-artifact@v4
         with:
           name: GM8Emulator-windows-x86
-          path: target/i686-pc-windows-msvc/release/*.exe
+          path: target/i686-pc-windows-gnu/release/*.exe
 
   build-linux:
     name: Build Linux
