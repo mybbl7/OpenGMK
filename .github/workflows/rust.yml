@@ -19,31 +19,28 @@ env:
 
 jobs:
   build-windows-64:
-    name: Build Windows 64-bit (MinGW)
+    name: Build Windows 64-bit (Ninja + MinGW)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: hecrj/setup-rust-action@master
         with:
           rust-version: stable
-      - name: Install MinGW
-        run: choco install mingw -y --force
-      - name: Configure CMake generator
-        run: echo "CMAKE_GENERATOR=MinGW Makefiles" >> $env:GITHUB_ENV
-      - name: Configure libsoundio
-        shell: bash
+
+      - name: Install MinGW and Ninja
         run: |
-          cmake -G "MinGW Makefiles" \
-            -DBUILD_DYNAMIC_LIBS=OFF \
-            -DBUILD_STATIC_LIBS=ON \
-            -DBUILD_EXAMPLE_PROGRAMS=OFF \
-            -DBUILD_TESTS=OFF \
-            -DCMAKE_BUILD_TYPE=Release \
-            C:/Users/runneradmin/.cargo/git/checkouts/udon-0ad808fdc3b6d4f6/1ae3cdc/libsoundio-sys/libsoundio
+          choco install mingw -y
+          choco install ninja -y
+
+      - name: Set CMake generator to Ninja
+        run: echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
+
       - name: Build 64-bit GNU target
         run: |
           rustup target add x86_64-pc-windows-gnu
           cargo +nightly build --release --target x86_64-pc-windows-gnu
+
       - uses: actions/upload-artifact@v4
         with:
           name: GM8Emulator-windows-x64
