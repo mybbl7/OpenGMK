@@ -18,27 +18,30 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-windows-msvc:
-    name: Build Windows 64-bit (MSVC + Ninja)
+  build-windows:
+    name: Build Windows (MSVC + GNU)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: hecrj/setup-rust-action@master
         with:
-          rust-version: stable
+          rust-version: nightly
 
-      - name: Install Ninja
-        run: choco install ninja -y
+      - name: Install Ninja and MinGW
+        run: |
+          choco install ninja -y
+          choco install mingw -y
 
       - name: Set CMake generator to Ninja
         run: echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
 
+      # MSVC build
       - name: Add MSVC target
-        run: rustup target add x86_64-pc-windows-msvc
+        run: rustup +nightly target add x86_64-pc-windows-msvc
 
-      - name: Build 64-bit MSVC target
-        run: cargo +nightly build -Zbuild-std --release --target x86_64-pc-windows-msvc
+      - name: Build MSVC target
+        run: cargo +nightly build --release --target x86_64-pc-windows-msvc
 
       - uses: actions/upload-artifact@v4
         with:
