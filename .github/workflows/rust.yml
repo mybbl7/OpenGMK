@@ -19,32 +19,44 @@ env:
 
 jobs:
   build-windows-64:
-    name: Build Windows 64-bit (Ninja + MinGW)
+    name: Build Windows 64-bit (Ninja + MinGW via pacman)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: hecrj/setup-rust-action@master
-        with:
-          rust-version: stable
-
-      - name: Install MinGW and Ninja
+  
+      - name: Install MSYS2
         run: |
-          choco install mingw -y
-          choco install ninja -y
-
+          choco install msys2 -y
+          refreshenv
+  
+      - name: Update pacman and install MinGW + Ninja
+        shell: msys2 {0}
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm \
+            mingw-w64-x86_64-gcc \
+            mingw-w64-x86_64-ninja \
+            make
+  
+      - name: Install Rust via rustup-init
+        run: |
+          curl https://win.rustup.rs/x86_64 -o rustup-init.exe
+          .\rustup-init.exe -y --default-toolchain stable --profile minimal
+          rustup update
+  
       - name: Set CMake generator to Ninja
         run: echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
-
+  
       - name: Build 64-bit GNU target
         run: |
           rustup target add x86_64-pc-windows-gnu
           cargo +nightly build --release --target x86_64-pc-windows-gnu
-
+  
       - uses: actions/upload-artifact@v4
         with:
           name: GM8Emulator-windows-x64
           path: target/x86_64-pc-windows-gnu/release/*.exe
+
           
   build-linux:
     name: Build Linux
