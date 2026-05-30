@@ -28,6 +28,8 @@ jobs:
           rust-version: stable
       - name: Install MinGW
         run: choco install mingw -y
+      - name: Configure CMake generator
+        run: echo "CMAKE_GENERATOR=MinGW Makefiles" >> $env:GITHUB_ENV
       - name: Build 64-bit GNU target
         run: |
           rustup target add x86_64-pc-windows-gnu
