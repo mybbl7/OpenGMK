@@ -23,36 +23,47 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-  
-      - name: Install MSYS2
-        run: |
-          choco install msys2 -y
-          refreshenv
-  
-      - name: Update pacman and install toolchains
+
+      - name: Setup MSYS2 and install packages
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+          update: true
+          install: >-
+            base-devel
+            git
+            ruby
+            vim
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-meson
+            mingw-w64-x86_64-autotools
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-rust
+            make
+
+      - name: Verify toolchain
         shell: msys2 {0}
         run: |
-          pacman -Syu --noconfirm
-          pacman -S --noconfirm \
-            mingw-w64-x86_64-gcc \
-            mingw-w64-x86_64-ninja \
-            mingw-w64-x86_64-rust \
-            make
-  
+          rustc --version
+          cargo --version
+          gcc --version
+          ninja --version
+
       - name: Set CMake generator to Ninja
         run: echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
-  
+
       - name: Build 64-bit GNU target
         shell: msys2 {0}
         run: |
+          # ensure the mingw64 environment variables are loaded if needed
+          # run your cargo build inside the msys2 shell so pacman-installed cargo is used
           cargo build --release --target x86_64-pc-windows-gnu
-  
+
       - uses: actions/upload-artifact@v4
         with:
           name: GM8Emulator-windows-x64
-          path: target/x86_64-pc-windows-gnu/release/*.exe
-  
-
+          path: target/x86_64-pc-windows-gnu/release/*.exe 
           
   build-linux:
     name: Build Linux
