@@ -18,35 +18,33 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-windows:
-    name: Build Windows (MSVC + GNU)
+  build-windows-64:
+    name: Build Windows 64-bit (Ninja + MinGW)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: hecrj/setup-rust-action@master
         with:
-          rust-version: nightly
+          rust-version: stable
 
-      - name: Install Ninja and MinGW
+      - name: Install MinGW and Ninja
         run: |
-          choco install ninja -y
           choco install mingw -y
+          choco install ninja -y
 
       - name: Set CMake generator to Ninja
         run: echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
 
-      # MSVC build
-      - name: Add MSVC target
-        run: rustup +nightly target add x86_64-pc-windows-msvc
-
-      - name: Build MSVC target
-        run: cargo +nightly build --release --target x86_64-pc-windows-msvc
+      - name: Build 64-bit GNU target
+        run: |
+          rustup target add x86_64-pc-windows-gnu
+          cargo +nightly build --release --target x86_64-pc-windows-gnu
 
       - uses: actions/upload-artifact@v4
         with:
           name: GM8Emulator-windows-x64
-          path: target/x86_64-pc-windows-msvc/release/*.exe
+          path: target/x86_64-pc-windows-gnu/release/*.exe
           
   build-linux:
     name: Build Linux
@@ -87,7 +85,7 @@ jobs:
   collect:
     name: Collect and package artifacts
     runs-on: ubuntu-latest
-    needs: [build-windows, build-linux]
+    needs: [build-windows-64, build-linux]
     steps:
       - uses: actions/checkout@v4
       - name: Download Windows x64 artifact
