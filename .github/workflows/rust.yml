@@ -18,70 +18,42 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-windows:
-    name: Build Windows (MinGW)
+  build-windows-64:
+    name: Build Windows 64-bit (MinGW)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: hecrj/setup-rust-action@master
         with:
           rust-version: stable
-
       - name: Install MinGW
         run: choco install mingw -y
-
-      - name: Rust setup
-        shell: pwsh
+      - name: Build 64-bit GNU target
         run: |
-          rustup self update
-          rustup update
-          rustup install nightly
-          git submodule update --init --recursive
-          rustup target add i686-pc-windows-gnu --toolchain=nightly
-
-      - name: Build gm8emulator-wow64 (GNU target)
-        shell: pwsh
-        env:
-          LIBFFI_SYS_STATIC: 1
-          CC: gcc
-          AR: ar
-        run: |
-          cd gm8emulator-wow64
-          $env:LIBFFI_SYS_STATIC = "1"
-          $env:LIBFFI_DIR = "$PWD\libffi-build"
-          cargo +nightly build --release --target i686-pc-windows-gnu
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Build failed for gm8emulator-wow64"
-            exit 1
-          }
-          Get-ChildItem -Recurse -Filter '*.exe'
-          if (Test-Path "target/i686-pc-windows-gnu/release/gm8emulator-wow64.exe") {
-            Move-Item -Path "target/i686-pc-windows-gnu/release/gm8emulator-wow64.exe" -Destination "." -Force
-          } else {
-            Write-Error "gm8emulator-wow64.exe not found after build"
-            exit 1
-          }
-          cd ..
-
-      - name: Build GM8Emulator.zip artifact
-        shell: pwsh
-        run: cargo +nightly build --release --target i686-pc-windows-gnu
-
-      - name: Archive bin
-        shell: pwsh
-        run: |
-          Move-Item -Path gm8emulator-wow64/gm8emulator-wow64.exe -Destination target/i686-pc-windows-gnu/release
-          cd target/i686-pc-windows-gnu/release
-          7z -tzip a GM8Emulator-windows.zip control-panel.exe gm8emulator-wow64.exe gm8decompiler.exe gm8emulator.exe -mx0 | grep ing || $true
-          cd ../../..
-          Move-Item -Path target/i686-pc-windows-gnu/release/GM8Emulator-windows.zip -Destination .
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+          rustup target add x86_64-pc-windows-gnu
+          cargo +nightly build --release --target x86_64-pc-windows-gnu
+      - uses: actions/upload-artifact@v4
         with:
-          name: GM8Emulator-windows
-          path: GM8Emulator-windows.zip
+          name: GM8Emulator-windows-x64
+          path: target/x86_64-pc-windows-gnu/release/*.exe
+
+  build-windows-32:
+    name: Build Windows 32-bit (MSVC)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hecrj/setup-rust-action@master
+        with:
+          rust-version: stable
+      - name: Build 32-bit MSVC target
+        run: |
+          rustup target add i686-pc-windows-msvc
+          cargo +nightly build --release --target i686-pc-windows-msvc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GM8Emulator-windows-x86
+          path: target/i686-pc-windows-msvc/release/*.exe
+
 
 
   build-linux:
