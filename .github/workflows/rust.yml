@@ -52,7 +52,9 @@ jobs:
 
       - name: Set CMake generator to Ninja
         run: echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
-        
+      - name: Set CMake policy version
+        run: echo "CMAKE_POLICY_VERSION_MINIMUM=3.5" >> $env:GITHUB_ENV
+    
       - name: Set Windows target macros for C build
         shell: msys2 {0}
         run: |
