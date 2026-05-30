@@ -46,7 +46,7 @@ jobs:
         with:
           rust-version: stable
       - name: Install MinGW-w64 with 32-bit support
-        run: choco install mingw-w64 -y
+        run: choco install mingw -y
       - name: Configure 32-bit compiler
         run: |
           echo "Setting CC/CXX to 32-bit MinGW"
