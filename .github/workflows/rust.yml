@@ -34,10 +34,11 @@ jobs:
       - name: Set CMake generator to Ninja
         run: echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
 
+      - name: Add MSVC target
+        run: rustup target add x86_64-pc-windows-msvc
+
       - name: Build 64-bit MSVC target
-        run: |
-          rustup target add x86_64-pc-windows-msvc
-          cargo +nightly build --release --target x86_64-pc-windows-msvc
+        run: cargo +nightly build --release --target x86_64-pc-windows-msvc
 
       - uses: actions/upload-artifact@v4
         with:
