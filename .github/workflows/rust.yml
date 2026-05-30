@@ -56,12 +56,13 @@ jobs:
       - name: Set Windows target macros for C build
         shell: msys2 {0}
         run: |
-          export CFLAGS="-D_WIN32_WINNT=0x0A00"
+          export CFLAGS="-D_WIN32_WINNT=0x0A00 -DWIN32_LEAN_AND_MEAN"
           export CXXFLAGS="$CFLAGS"
           export CPPFLAGS="$CFLAGS"
           # optional: show them for debugging
           echo "CFLAGS=$CFLAGS"
           echo "CXXFLAGS=$CXXFLAGS"
+
 
       - name: Build 64-bit GNU target
         shell: msys2 {0}
