@@ -48,9 +48,7 @@ jobs:
         with:
           name: GM8Emulator-windows-x64
           path: target/x86_64-pc-windows-gnu/release/*.exe
-  
-    
-
+          
   build-linux:
     name: Build Linux
     runs-on: ubuntu-latest
