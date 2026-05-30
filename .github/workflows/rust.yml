@@ -29,33 +29,29 @@ jobs:
           choco install msys2 -y
           refreshenv
   
-      - name: Update pacman and install MinGW + Ninja
+      - name: Update pacman and install toolchains
         shell: msys2 {0}
         run: |
           pacman -Syu --noconfirm
           pacman -S --noconfirm \
             mingw-w64-x86_64-gcc \
             mingw-w64-x86_64-ninja \
+            mingw-w64-x86_64-rust \
             make
-  
-      - name: Install Rust via rustup-init
-        run: |
-          curl https://win.rustup.rs/x86_64 -o rustup-init.exe
-          .\rustup-init.exe -y --default-toolchain stable --profile minimal
-          rustup update
   
       - name: Set CMake generator to Ninja
         run: echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
   
       - name: Build 64-bit GNU target
+        shell: msys2 {0}
         run: |
-          rustup target add x86_64-pc-windows-gnu
-          cargo +nightly build --release --target x86_64-pc-windows-gnu
+          cargo build --release --target x86_64-pc-windows-gnu
   
       - uses: actions/upload-artifact@v4
         with:
           name: GM8Emulator-windows-x64
           path: target/x86_64-pc-windows-gnu/release/*.exe
+  
 
           
   build-linux:
