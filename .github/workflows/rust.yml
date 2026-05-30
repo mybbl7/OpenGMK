@@ -44,13 +44,14 @@ jobs:
       - uses: hecrj/setup-rust-action@master
         with:
           rust-version: stable
+      - name: Install i686 MSVC target
+        run: rustup target add i686-pc-windows-msvc
       - name: Build 32-bit MSVC target
-        run: |
-          cargo +nightly build --release
+        run: cargo +nightly build -Zbuild-std --target i686-pc-windows-msvc --release
       - uses: actions/upload-artifact@v4
         with:
           name: GM8Emulator-windows-x86
-          path: target
+          path: target/i686-pc-windows-msvc/release/*.exe
 
   build-linux:
     name: Build Linux
