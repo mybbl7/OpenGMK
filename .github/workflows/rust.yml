@@ -48,30 +48,6 @@ jobs:
         with:
           name: GM8Emulator-windows-x64
           path: target/x86_64-pc-windows-gnu/release/*.exe
-
-  build-windows-32:
-    name: Build Windows 32-bit (MinGW)
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hecrj/setup-rust-action@master
-        with:
-          rust-version: stable
-      - name: Install MinGW-w64 with 32-bit support
-        run: choco install mingw -y
-      - name: Configure 32-bit compiler
-        run: |
-          echo "Setting CC/CXX to 32-bit MinGW"
-          setx CC i686-w64-mingw32-gcc
-          setx CXX i686-w64-mingw32-g++
-      - name: Build 32-bit GNU target
-        run: |
-          rustup target add i686-pc-windows-gnu
-          cargo build --release --target i686-pc-windows-gnu
-      - uses: actions/upload-artifact@v4
-        with:
-          name: GM8Emulator-windows-x86
-          path: target/i686-pc-windows-gnu/release/*.exe
   
     
 
