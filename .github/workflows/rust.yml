@@ -46,7 +46,7 @@ jobs:
         with:
           rust-version: nightly
       - name: Install MinGW
-        run: choco install mingw -y
+        run: choco install mingw --x86 -y
       - name: Install i686 GNU target + rust-src
         run: |
           rustup target add i686-pc-windows-gnu --toolchain nightly
