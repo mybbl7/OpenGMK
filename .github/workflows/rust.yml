@@ -45,7 +45,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: GM8Emulator-windows-msvc-x64
+          name: GM8Emulator-windows-x64
           path: target/x86_64-pc-windows-msvc/release/*.exe
           
   build-linux:
@@ -87,14 +87,14 @@ jobs:
   collect:
     name: Collect and package artifacts
     runs-on: ubuntu-latest
-    needs: [build-windows-msvc, build-linux]
+    needs: [build-windows, build-linux]
     steps:
       - uses: actions/checkout@v4
-      - name: Download Windows MSVC x64 artifact
+      - name: Download Windows x64 artifact
         uses: actions/download-artifact@v4
         with:
-          name: GM8Emulator-windows-msvc-x64
-          path: artifacts/windows-msvc-x64
+          name: GM8Emulator-windows-x64
+          path: artifacts/windows-x64
       - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
@@ -102,14 +102,14 @@ jobs:
           path: artifacts/linux
       - name: Inspect downloaded artifacts
         run: |
-          echo "Windows MSVC x64 files:"
-          ls -la artifacts/windows-msvc-x64 || true
+          echo "Windows x64 files:"
+          ls -la artifacts/windows-x64 || true
           echo "Linux files:"
           ls -la artifacts/linux || true
       - name: Create combined release zip
         run: |
           mkdir -p release
-          cp artifacts/windows-msvc-x64/* release/ || true
+          cp artifacts/windows-x64/* release/ || true
           cp artifacts/linux/* release/ || true
           cd release
           zip -r ../GM8Emulator-all-platforms.zip . || true
